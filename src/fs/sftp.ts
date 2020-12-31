@@ -507,6 +507,10 @@ export class SFTPFileSystem extends vscrw_fs.FileSystemBase {
                 });
             }
 
+            conn.client['client'].on('close', () => {
+                this.tryCloseAndDeleteConnection( CACHE_KEY );
+            });
+
             await conn.client.connect(
                 OPTS
             );
@@ -1022,10 +1026,9 @@ async function toFileStat(fi: any, uri: vscode.Uri, conn: SFTPConnection): Promi
 
 async function tryCloseConnection(conn: SFTPConnection) {
     try {
-        if (conn) {
+        if (conn && !conn.client.endCalled) {
             await conn.client.end();
         }
-
         return true;
     } catch {
         return false;
